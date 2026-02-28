@@ -1,0 +1,1 @@
+ffprobe -select_streams s -show_entries stream=index,codec_long_name:stream_tags=language -of json res/The\ Artful\ Dodger\ 02x01\ -\ Hangman\ WEBDL-1080p.mkv -v 0
