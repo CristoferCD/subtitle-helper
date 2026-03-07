@@ -5,11 +5,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 type TranslationQuery struct {
@@ -75,9 +75,11 @@ func getTranslated(text string) string {
 	}
 	json_data, err := json.Marshal(body)
 
-	response, err := http.Post("http://192.168.50.29:5000/translate", "application/json", bytes.NewBuffer(json_data))
+	client := &http.Client{
+		Timeout: 5 * time.Minute,
+	}
+	response, err := client.Post("http://192.168.50.29:5000/translate", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
-		log.Fatal("Error in http", err)
 		panic(err)
 	}
 	defer response.Body.Close()

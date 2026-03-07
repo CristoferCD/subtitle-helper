@@ -9,11 +9,24 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type model struct {
+type fileSelectionModel struct {
 	filepicker   filepicker.Model
 	selectedFile string
 	quitting     bool
 	err          error
+	windowWidth  int
+	windowHeight int
+}
+
+func NewFileSelectionModel() fileSelectionModel {
+	fp := filepicker.New()
+	fp.AllowedTypes = []string{".mkv"}
+	fp.CurrentDirectory = "."
+	fp.DirAllowed = true
+
+	return fileSelectionModel{
+		filepicker: fp,
+	}
 }
 
 type clearErrorMsg struct{}
@@ -24,11 +37,11 @@ func clearErrorAfter(t time.Duration) tea.Cmd {
 	})
 }
 
-func (m model) Init() tea.Cmd {
+func (m fileSelectionModel) Init() tea.Cmd {
 	return m.filepicker.Init()
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m fileSelectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -38,6 +51,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case clearErrorMsg:
 		m.err = nil
+	case tea.WindowSizeMsg:
+		m.windowWidth = msg.Width
+		m.windowHeight = msg.Height
 	}
 
 	var cmd tea.Cmd
@@ -47,7 +63,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if didSelect, path := m.filepicker.DidSelectFile(msg); didSelect {
 		// Get the path of the selected file.
 		m.selectedFile = path
-		slModel := subtitleListModel{selectedFile: path}
+		slModel := subtitleListModel{
+			selectedFile: path,
+			windowWidth:  m.windowWidth,
+			windowHeight: m.windowHeight,
+		}
 		return slModel, slModel.Init()
 	}
 
@@ -63,7 +83,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
+func (m fileSelectionModel) View() string {
 	if m.quitting {
 		return ""
 	}

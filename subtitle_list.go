@@ -13,6 +13,8 @@ type subtitleListModel struct {
 	selectedItem FfmpegStream
 	chosen       bool
 	extracted    bool
+	windowWidth  int
+	windowHeight int
 }
 
 type listStreamsMsg struct {
@@ -53,16 +55,15 @@ func (m subtitleListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for idx, sub := range msg.streams {
 			items[idx] = sub
 		}
-		m.streams = list.New(items, list.NewDefaultDelegate(), 0, 0)
+		m.streams = list.New(items, list.NewDefaultDelegate(), m.windowWidth, m.windowHeight)
 		m.streams.Title = "Available streams"
 	case extractedSubtitleMsg:
 		return m, translate(msg.srtFile)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			prevModel := model{}
-			prevModel.Init()
-			return prevModel.Update(msg)
+			prevModel := NewFileSelectionModel()
+			return prevModel, prevModel.Init()
 		case "enter":
 			selected, ok := m.streams.SelectedItem().(FfmpegStream)
 			if ok {
