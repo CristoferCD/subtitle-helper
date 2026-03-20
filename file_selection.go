@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/filepicker"
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -64,9 +65,10 @@ func (m fileSelectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Get the path of the selected file.
 		m.selectedFile = path
 		slModel := subtitleListModel{
-			selectedFile: path,
-			windowWidth:  m.windowWidth,
-			windowHeight: m.windowHeight,
+			selectedFile:       path,
+			windowWidth:        m.windowWidth,
+			windowHeight:       m.windowHeight,
+			extractionProgress: progress.New(progress.WithDefaultGradient()),
 		}
 		return slModel, slModel.Init()
 	}

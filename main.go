@@ -6,8 +6,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+var program *tea.Program
+
 func main() {
 	m := NewFileSelectionModel()
-	tea.NewProgram(&m, tea.WithAltScreen()).Run()
+	program = tea.NewProgram(&m, tea.WithAltScreen())
+	program.Run()
 	fmt.Println("Done")
 }
