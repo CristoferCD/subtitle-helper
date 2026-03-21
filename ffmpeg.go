@@ -34,7 +34,7 @@ func ListSubtitleStreams(filePath string) []FfmpegStream {
 
 	out, err := cmd.Output()
 	if err != nil {
-		log.Fatalf("Error %s: %s", err, stderr.String())
+		log.Printf("Error %s: %s", err, stderr.String())
 		panic(err)
 	}
 
@@ -69,7 +69,7 @@ func ExtractSubtitle(path string, subtitleStream FfmpegStream, progressWriter fu
 
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalf("Error %s: %s", err, stderr.String())
+		log.Printf("Error %s: %s", err, stderr.String())
 		panic(err)
 	}
 

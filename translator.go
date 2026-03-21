@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -26,6 +27,7 @@ type TranslationResponse struct {
 func Translate(subtitleFile string) {
 	f, err := os.Open(subtitleFile)
 	if err != nil {
+		log.Printf("Error opening subtitle file %s, %s", subtitleFile, err)
 		panic(err)
 	}
 	defer f.Close()
@@ -33,6 +35,7 @@ func Translate(subtitleFile string) {
 	targetFileName := targetFileName(subtitleFile)
 	targetFile, err := os.Create(targetFileName)
 	if err != nil {
+		log.Printf("Error opening target subtitle file %s, %s", targetFileName, err)
 		panic(err)
 	}
 	defer targetFile.Close()
@@ -41,19 +44,37 @@ func Translate(subtitleFile string) {
 
 	scanner := bufio.NewScanner(f)
 	idx := 0
+	lineIdx := 0
 	for scanner.Scan() {
 		line := scanner.Text()
+		log.Printf("Reading line to translate: %s", line)
 		if idx < 2 {
-			writer.WriteString(line + "\n")
+			_, err := writer.WriteString(line + "\n")
+			if err != nil {
+				log.Printf("Error writing translated string: %s", err)
+			}
 			idx++
 		} else if line == "" {
-			writer.Write([]byte(line + "\n"))
+			_, err := writer.Write([]byte(line + "\n"))
+			if err != nil {
+				log.Printf("Error writing translated string: %s", err)
+			}
 			idx = 0
 		} else {
-			writer.WriteString(getTranslated(line) + "\n")
+			_, err := writer.WriteString(getTranslated(line) + "\n")
+			if err != nil {
+				log.Printf("Error writing translated string: %s", err)
+			}
 			idx++
 		}
+		lineIdx++
 	}
+	// Flush the writer to ensure all data is committed to the file.
+	err = writer.Flush()
+	if err != nil {
+		log.Println("Error flushing writer:", err)
+	}
+	log.Printf("Finished translating.")
 }
 
 func targetFileName(subtitleFile string) string {
@@ -76,19 +97,26 @@ func getTranslated(text string) string {
 	json_data, err := json.Marshal(body)
 
 	client := &http.Client{
-		Timeout: 5 * time.Minute,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout: 30 * time.Minute,
+				// KeepAlive: 30 * time.Second,
+			}).Dial,
+			// TLSHandshakeTimeout:   10 * time.Second,
+			// ResponseHeaderTimeout: 10 * time.Second,
+			// ExpectContinueTimeout: 1 * time.Second,
+		},
 	}
 	response, err := client.Post("http://192.168.50.29:5000/translate", "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
+		log.Printf("Error on translate http call: %s", err)
 		panic(err)
 	}
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
 		var errRes map[string]interface{}
 		json.NewDecoder(response.Body).Decode(&errRes)
-
-		fmt.Printf("Error: %s", errRes)
-		fmt.Printf("Headers: %s", response.Header)
+		log.Fatalf("Error in translation request. Status (%d) | Error: %s | Headers: %s", response.StatusCode, errRes, response.Header)
 	}
 
 	res := &TranslationResponse{}
