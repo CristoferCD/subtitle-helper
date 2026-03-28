@@ -22,7 +22,7 @@ type fileSelectionModel struct {
 func NewFileSelectionModel() fileSelectionModel {
 	fp := filepicker.New()
 	fp.AllowedTypes = []string{".mkv"}
-	fp.CurrentDirectory = "."
+	fp.CurrentDirectory = config.workDir
 	fp.DirAllowed = true
 
 	return fileSelectionModel{

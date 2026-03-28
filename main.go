@@ -10,7 +10,40 @@ import (
 
 var program *tea.Program
 
+var config Config
+
+type Config struct {
+	workDir            string
+	libreTranslateHost string
+	libreTranslatePort string
+}
+
+func LoadConfig() Config {
+	workDir := os.Getenv("WORK_DIRECTORY")
+	if len(workDir) == 0 {
+		workDir = "."
+	}
+
+	translateHost := os.Getenv("LIBRETRANSLATE_HOST")
+	if len(workDir) == 0 {
+		translateHost = "libretranslate"
+	}
+
+	translatePort := os.Getenv("LIBRETRANSLATE_PORT")
+	if len(workDir) == 0 {
+		translatePort = "5000"
+	}
+
+	return Config{
+		workDir:            workDir,
+		libreTranslateHost: translateHost,
+		libreTranslatePort: translatePort,
+	}
+}
+
 func main() {
+	config = LoadConfig()
+
 	m := NewFileSelectionModel()
 	program = tea.NewProgram(&m, tea.WithAltScreen())
 

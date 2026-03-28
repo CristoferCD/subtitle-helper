@@ -15,4 +15,4 @@ RUN apk upgrade -U \
 
 COPY --from=builder /app/main /app/main
 
-CMD ["/app/main"]
+ENTRYPOINT ["/app/main"]

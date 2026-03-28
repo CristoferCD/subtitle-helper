@@ -47,7 +47,6 @@ func Translate(subtitleFile string) {
 	lineIdx := 0
 	for scanner.Scan() {
 		line := scanner.Text()
-		log.Printf("Reading line to translate: %s", line)
 		if idx < 2 {
 			_, err := writer.WriteString(line + "\n")
 			if err != nil {
@@ -107,7 +106,8 @@ func getTranslated(text string) string {
 			// ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
-	response, err := client.Post("http://192.168.50.29:5000/translate", "application/json", bytes.NewBuffer(json_data))
+	url := "http://" + config.libreTranslateHost + ":" + config.libreTranslatePort + "/translate"
+	response, err := client.Post(url, "application/json", bytes.NewBuffer(json_data))
 	if err != nil {
 		log.Printf("Error on translate http call: %s", err)
 		panic(err)
